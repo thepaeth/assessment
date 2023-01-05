@@ -3,6 +3,7 @@ package expenses
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -139,5 +140,28 @@ func TestUpdateExpense(t *testing.T) {
 	// Assertions
 	if assert.NoError(t, h.UpdateExpense(c)) {
 		assert.Equal(t, http.StatusAccepted, res.Code)
+	}
+}
+
+func TestGetAllExpenses(t *testing.T) {
+	// Mock
+	db, mock, _ := sqlmock.New()
+	expMockSql := "SELECT id, title, amount, note, tags FROM expenses"
+	expMockRow := sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
+		AddRow(newFakeData[0].ID, newFakeData[0].Title, newFakeData[0].Amount, newFakeData[0].Note, pq.Array(&newFakeData[0].Tags)).
+		AddRow(newFakeData[1].ID, newFakeData[1].Title, newFakeData[1].Amount, newFakeData[1].Note, pq.Array(&newFakeData[1].Tags))
+
+	mock.ExpectPrepare(regexp.QuoteMeta(expMockSql)).ExpectQuery().WillReturnRows((expMockRow))
+
+	// Setup echo server
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/expense", nil)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
+	h := &handler{db}
+
+	if assert.NoError(t, h.GetAllExpenses(c)) {
+		assert.Equal(t, http.StatusOK, res.Code)
+		log.Println(res.Body.String())
 	}
 }
