@@ -3,6 +3,7 @@ package expenses
 import (
 	"bytes"
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -15,12 +16,38 @@ import (
 )
 
 var (
-	bodyExpense = `{
-		"title": "strawberry smoothie",
-		"amount": 79,
-		"note": "night market promotion discount 10 bath", 
-		"tags": ["food", "beverage"]
-	}`
+	newFakeData = []Expenses{
+		{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 79.00,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   []string{"food", "beverage"},
+		},
+		{
+			ID:     2,
+			Title:  "iPhone 14 Pro Max 1TB",
+			Amount: 66900.00,
+			Note:   "birthday gift from my love",
+			Tags:   []string{"gadget"},
+		},
+	}
+	fakeData = map[string]*Expenses{
+		"1": &Expenses{
+			1,
+			"strawberry smoothie",
+			79.00,
+			"night market promotion discount 10 bath",
+			[]string{"food", "beverage"},
+		},
+		"2": &Expenses{
+			2,
+			"iPhone 14 Pro Max 1TB",
+			66900.00,
+			"birthday gift from my love",
+			[]string{"gadget"},
+		},
+	}
 	mockData = Expenses{
 		Title:  "strawberry smoothie",
 		Amount: 79.00,
@@ -62,5 +89,79 @@ func TestCreateExpenseMock(t *testing.T) {
 		assert.Equal(t, 79.00, exp.Amount)
 		assert.Equal(t, "night market promotion discount 10 bath", exp.Note)
 		assert.Equal(t, []string{"food", "beverage"}, exp.Tags)
+	}
+}
+
+func TestGetExpenseByIDSuccess(t *testing.T) {
+	// Mock
+	db, mock, _ := sqlmock.New()
+	expID := "1"
+	expMockSql := "SELECT id, title, amount, note, tags FROM expenses WHERE id = $1"
+	expMockRow := sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
+		AddRow(expID, mockData.Title, mockData.Amount, mockData.Note, pq.Array(&mockData.Tags))
+
+	mock.ExpectPrepare(regexp.QuoteMeta(expMockSql)).ExpectQuery().WithArgs(expID).WillReturnRows((expMockRow))
+
+	// Setup echo server
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/expenses", nil)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
+	c.SetPath("/:id")
+	c.SetParamNames("id")
+	c.SetParamValues(expID)
+	h := &handler{db}
+
+	if assert.NoError(t, h.GetExpense(c)) {
+		assert.Equal(t, http.StatusOK, res.Code)
+	}
+
+}
+
+func TestUpdateExpense(t *testing.T) {
+	// Setup echo server
+	expID := "1"
+
+	body := `{
+		"title": "apple smoothie",
+		"amount": 89,
+		"note": "no discount",
+		"tags": ["beverage"]
+	}`
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPut, "/expenses", bytes.NewBufferString(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
+	c.SetPath("/:id")
+	c.SetParamNames("id")
+	c.SetParamValues(expID)
+	h := &newHandler{newFakeData}
+	// Assertions
+	if assert.NoError(t, h.UpdateExpense(c)) {
+		assert.Equal(t, http.StatusAccepted, res.Code)
+	}
+}
+
+func TestGetAllExpenses(t *testing.T) {
+	// Mock
+	db, mock, _ := sqlmock.New()
+	expMockSql := "SELECT id, title, amount, note, tags FROM expenses"
+	expMockRow := sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
+		AddRow(newFakeData[0].ID, newFakeData[0].Title, newFakeData[0].Amount, newFakeData[0].Note, pq.Array(&newFakeData[0].Tags)).
+		AddRow(newFakeData[1].ID, newFakeData[1].Title, newFakeData[1].Amount, newFakeData[1].Note, pq.Array(&newFakeData[1].Tags))
+
+	mock.ExpectPrepare(regexp.QuoteMeta(expMockSql)).ExpectQuery().WillReturnRows((expMockRow))
+
+	// Setup echo server
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/expense", nil)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
+	h := &handler{db}
+
+	if assert.NoError(t, h.GetAllExpenses(c)) {
+		assert.Equal(t, http.StatusOK, res.Code)
+		log.Println(res.Body.String())
 	}
 }
