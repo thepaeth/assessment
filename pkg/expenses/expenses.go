@@ -66,11 +66,27 @@ func (h *handler) GetExpense(c echo.Context) error {
 	}
 }
 
-func (h *newHandler) GetAllExpenses(c echo.Context) error {
-	if h.db == nil {
-		return c.JSON(http.StatusNoContent, Err{Message: "No Data"})
+func (h *handler) GetAllExpenses(c echo.Context) error {
+	stmt, err := h.db.Prepare("SELECT id, title, amount, note, tags FROM expenses")
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "Can't prepare query all expenses statment"})
 	}
-	return c.JSON(http.StatusOK, h.db)
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, Err{Message: "Can't query all users"})
+	}
+
+	exps := []Expenses{}
+	for rows.Next() {
+		var exp Expenses
+		err = rows.Scan(&exp.ID, &exp.Title, &exp.Amount, &exp.Note, (*pq.StringArray)(&exp.Tags))
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, Err{Message: "Can't scan expenses"})
+		}
+		exps = append(exps, exp)
+	}
+	return c.JSON(http.StatusOK, exps)
 }
 
 func (h *newHandler) UpdateExpense(c echo.Context) error {
