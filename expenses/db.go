@@ -3,20 +3,15 @@ package expenses
 import (
 	"database/sql"
 	"log"
-	"os"
 
 	_ "github.com/lib/pq"
 )
 
-var db *sql.DB
+func expService(db *sql.DB) *handler {
+	return &handler{db: db}
+}
 
-func InitDB() {
-	var err error
-	db, err = sql.Open("postgres", os.Getenv("DATABASE_URL"))
-	if err != nil {
-		log.Fatal("Connect to database error", err)
-	}
-
+func (h *handler) InitDB() {
 	createTB := `
 	CREATE TABLE IF NOT EXISTS expenses (
 		id SERIAL PRIMARY KEY,
@@ -26,7 +21,7 @@ func InitDB() {
 		tags TEXT[]
 	);
 	`
-	_, err = db.Exec(createTB)
+	_, err := h.db.Exec(createTB)
 	if err != nil {
 		log.Fatal("Can't create table", err)
 	}
