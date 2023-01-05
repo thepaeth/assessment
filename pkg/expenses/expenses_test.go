@@ -3,7 +3,6 @@ package expenses
 import (
 	"bytes"
 	"encoding/json"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -154,6 +153,5 @@ func TestGetAllExpenses(t *testing.T) {
 
 	if assert.NoError(t, h.GetAllExpenses(c)) {
 		assert.Equal(t, http.StatusOK, res.Code)
-		log.Println(res.Body.String())
 	}
 }
