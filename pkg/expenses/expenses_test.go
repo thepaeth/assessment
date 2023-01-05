@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	newFakeData = []Expenses{
+	fakeData = []Expenses{
 		{
 			ID:     1,
 			Title:  "strawberry smoothie",
@@ -30,22 +30,6 @@ var (
 			Amount: 66900.00,
 			Note:   "birthday gift from my love",
 			Tags:   []string{"gadget"},
-		},
-	}
-	fakeData = map[string]*Expenses{
-		"1": &Expenses{
-			1,
-			"strawberry smoothie",
-			79.00,
-			"night market promotion discount 10 bath",
-			[]string{"food", "beverage"},
-		},
-		"2": &Expenses{
-			2,
-			"iPhone 14 Pro Max 1TB",
-			66900.00,
-			"birthday gift from my love",
-			[]string{"gadget"},
 		},
 	}
 	mockData = Expenses{
@@ -136,7 +120,7 @@ func TestUpdateExpense(t *testing.T) {
 	c.SetPath("/:id")
 	c.SetParamNames("id")
 	c.SetParamValues(expID)
-	h := &newHandler{newFakeData}
+	h := &newHandler{fakeData}
 	// Assertions
 	if assert.NoError(t, h.UpdateExpense(c)) {
 		assert.Equal(t, http.StatusAccepted, res.Code)
@@ -148,8 +132,8 @@ func TestGetAllExpenses(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	expMockSql := "SELECT id, title, amount, note, tags FROM expenses"
 	expMockRow := sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
-		AddRow(newFakeData[0].ID, newFakeData[0].Title, newFakeData[0].Amount, newFakeData[0].Note, pq.Array(&newFakeData[0].Tags)).
-		AddRow(newFakeData[1].ID, newFakeData[1].Title, newFakeData[1].Amount, newFakeData[1].Note, pq.Array(&newFakeData[1].Tags))
+		AddRow(fakeData[0].ID, fakeData[0].Title, fakeData[0].Amount, fakeData[0].Note, pq.Array(&fakeData[0].Tags)).
+		AddRow(fakeData[1].ID, fakeData[1].Title, fakeData[1].Amount, fakeData[1].Note, pq.Array(&fakeData[1].Tags))
 
 	mock.ExpectPrepare(regexp.QuoteMeta(expMockSql)).ExpectQuery().WillReturnRows((expMockRow))
 
