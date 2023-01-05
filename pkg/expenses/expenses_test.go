@@ -103,9 +103,17 @@ func TestGetExpenseByIDSuccess(t *testing.T) {
 }
 
 func TestUpdateExpense(t *testing.T) {
-	// Setup echo server
+	// Mock
+	db, mock, _ := sqlmock.New()
 	expID := "1"
+	expMockSql := "UPDATE expenses SET title = $2, amount = $3, note = $4, tags = $5 WHERE id = $1"
+	expMockRow := sqlmock.NewResult(1, 1)
 
+	mock.ExpectPrepare(regexp.QuoteMeta(expMockSql)).ExpectExec().
+		WithArgs(expID, "apple smoothie", 89.00, "no discount", pq.Array(&[]string{"beverage"})).
+		WillReturnResult(expMockRow)
+
+	// Setup echo server
 	body := `{
 		"title": "apple smoothie",
 		"amount": 89,
@@ -120,7 +128,7 @@ func TestUpdateExpense(t *testing.T) {
 	c.SetPath("/:id")
 	c.SetParamNames("id")
 	c.SetParamValues(expID)
-	h := &newHandler{fakeData}
+	h := &handler{db}
 	// Assertions
 	if assert.NoError(t, h.UpdateExpense(c)) {
 		assert.Equal(t, http.StatusAccepted, res.Code)
