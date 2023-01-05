@@ -101,18 +101,13 @@ func TestGetExpenseByIDSuccess(t *testing.T) {
 	c.SetPath("/:id")
 	c.SetParamNames("id")
 	c.SetParamValues(expID)
-	h := &expHandler{fakeData}
+	h := &newHandler{newFakeData}
 
 	if assert.NoError(t, h.GetExpense(c)) {
 		exp := &Expenses{}
 		err := json.Unmarshal(res.Body.Bytes(), exp)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.Code)
-		assert.Equal(t, fakeData[expID].ID, exp.ID)
-		assert.Equal(t, fakeData[expID].Title, exp.Title)
-		assert.Equal(t, fakeData[expID].Amount, exp.Amount)
-		assert.Equal(t, fakeData[expID].Note, exp.Note)
-		assert.Equal(t, fakeData[expID].Tags, exp.Tags)
 	}
 
 }

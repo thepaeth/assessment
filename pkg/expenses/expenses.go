@@ -42,13 +42,14 @@ func CreateExpense(c echo.Context) error {
 	return c.JSON(http.StatusCreated, exp)
 }
 
-func (h *expHandler) GetExpense(c echo.Context) error {
+func (h *newHandler) GetExpense(c echo.Context) error {
 	id := c.Param("id")
-	exp := h.db[id]
-	if exp == nil {
-		return c.JSON(http.StatusNotFound, Err{Message: "Data Not Found"})
+	for _, exp := range h.db {
+		if fmt.Sprint(exp.ID) == id {
+			return c.JSON(http.StatusOK, exp)
+		}
 	}
-	return c.JSON(http.StatusOK, exp)
+	return c.JSON(http.StatusNotFound, Err{Message: "Data Not Found"})
 }
 
 func (h *newHandler) UpdateExpense(c echo.Context) error {
