@@ -32,13 +32,13 @@ type expHandler struct {
 	db map[string]*Expenses
 }
 
-func CreateExpense(c echo.Context) error {
+func (h *handler) CreateExpense(c echo.Context) error {
 	var exp Expenses
 	err := c.Bind(&exp)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, Err{Message: "Bad Request!!!"})
 	}
-	row := db.QueryRow("INSERT INTO expenses (title, amount, note, tags) values($1, $2, $3, $4) RETURNING id", exp.Title, exp.Amount, exp.Note, pq.Array(&exp.Tags))
+	row := h.db.QueryRow("INSERT INTO expenses (title, amount, note, tags) values($1, $2, $3, $4) RETURNING id", exp.Title, exp.Amount, exp.Note, pq.Array(&exp.Tags))
 	err = row.Scan(&exp.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, Err{Message: "Can't Create Expense!!!!"})

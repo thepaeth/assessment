@@ -41,7 +41,7 @@ var (
 
 func TestCreateExpenseMock(t *testing.T) {
 	// db mock
-	mockdb, mock, _ := sqlmock.New()
+	db, mock, _ := sqlmock.New()
 	expMockSql := "INSERT INTO expenses (title, amount, note, tags) values($1, $2, $3, $4) RETURNING id"
 	expMockRow := sqlmock.NewRows([]string{"id"}).AddRow(1)
 
@@ -59,10 +59,10 @@ func TestCreateExpenseMock(t *testing.T) {
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	res := httptest.NewRecorder()
 	c := e.NewContext(req, res)
-	db = mockdb
+	h := &handler{db}
 
 	// Assertions
-	if assert.NoError(t, CreateExpense(c)) {
+	if assert.NoError(t, h.CreateExpense(c)) {
 		exp := &Expenses{}
 		err := json.Unmarshal(res.Body.Bytes(), exp)
 		assert.Nil(t, err)
