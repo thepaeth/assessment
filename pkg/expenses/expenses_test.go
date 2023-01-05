@@ -15,12 +15,22 @@ import (
 )
 
 var (
-	bodyExpense = `{
-		"title": "strawberry smoothie",
-		"amount": 79,
-		"note": "night market promotion discount 10 bath", 
-		"tags": ["food", "beverage"]
-	}`
+	fakeData = map[string]*Expenses{
+		"1": &Expenses{
+			1,
+			"strawberry smoothie",
+			79.00,
+			"night market promotion discount 10 bath",
+			[]string{"food", "beverage"},
+		},
+		"2": &Expenses{
+			2,
+			"iPhone 14 Pro Max 1TB",
+			66900.00,
+			"birthday gift from my love",
+			[]string{"gadget"},
+		},
+	}
 	mockData = Expenses{
 		Title:  "strawberry smoothie",
 		Amount: 79.00,
@@ -63,4 +73,30 @@ func TestCreateExpenseMock(t *testing.T) {
 		assert.Equal(t, "night market promotion discount 10 bath", exp.Note)
 		assert.Equal(t, []string{"food", "beverage"}, exp.Tags)
 	}
+}
+
+func TestGetExpenseByIDSuccess(t *testing.T) {
+	// Setup echo server
+	expID := "1"
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/expenses", nil)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
+	c.SetPath("/:id")
+	c.SetParamNames("id")
+	c.SetParamValues(expID)
+	h := &expHandler{fakeData}
+
+	if assert.NoError(t, h.GetExpense(c)) {
+		exp := &Expenses{}
+		err := json.Unmarshal(res.Body.Bytes(), exp)
+		assert.Nil(t, err)
+		assert.Equal(t, http.StatusOK, res.Code)
+		assert.Equal(t, fakeData[expID].ID, exp.ID)
+		assert.Equal(t, fakeData[expID].Title, exp.Title)
+		assert.Equal(t, fakeData[expID].Amount, exp.Amount)
+		assert.Equal(t, fakeData[expID].Note, exp.Note)
+		assert.Equal(t, fakeData[expID].Tags, exp.Tags)
+	}
+
 }

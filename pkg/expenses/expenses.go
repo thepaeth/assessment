@@ -19,6 +19,10 @@ type Err struct {
 	Message string `json:"message"`
 }
 
+type expHandler struct {
+	db map[string]*Expenses
+}
+
 func CreateExpense(c echo.Context) error {
 	var exp Expenses
 	err := c.Bind(&exp)
@@ -31,4 +35,13 @@ func CreateExpense(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, Err{Message: "Can't Create Expense!!!!"})
 	}
 	return c.JSON(http.StatusCreated, exp)
+}
+
+func (h *expHandler) GetExpense(c echo.Context) error {
+	id := c.Param("id")
+	exp := h.db[id]
+	if exp == nil {
+		return c.JSON(http.StatusNotFound, Err{Message: "Data Not Found"})
+	}
+	return c.JSON(http.StatusOK, exp)
 }
