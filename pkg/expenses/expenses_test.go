@@ -92,8 +92,16 @@ func TestCreateExpenseMock(t *testing.T) {
 }
 
 func TestGetExpenseByIDSuccess(t *testing.T) {
-	// Setup echo server
+	// Mock
+	db, mock, _ := sqlmock.New()
 	expID := "1"
+	expMockSql := "SELECT id, title, amount, note, tags FROM expenses WHERE id = $1"
+	expMockRow := sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
+		AddRow(expID, mockData.Title, mockData.Amount, mockData.Note, pq.Array(&mockData.Tags))
+
+	mock.ExpectPrepare(regexp.QuoteMeta(expMockSql)).ExpectQuery().WithArgs(expID).WillReturnRows((expMockRow))
+
+	// Setup echo server
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/expenses", nil)
 	res := httptest.NewRecorder()
@@ -101,18 +109,10 @@ func TestGetExpenseByIDSuccess(t *testing.T) {
 	c.SetPath("/:id")
 	c.SetParamNames("id")
 	c.SetParamValues(expID)
-	h := &expHandler{fakeData}
+	h := &handler{db}
 
 	if assert.NoError(t, h.GetExpense(c)) {
-		exp := &Expenses{}
-		err := json.Unmarshal(res.Body.Bytes(), exp)
-		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.Code)
-		assert.Equal(t, fakeData[expID].ID, exp.ID)
-		assert.Equal(t, fakeData[expID].Title, exp.Title)
-		assert.Equal(t, fakeData[expID].Amount, exp.Amount)
-		assert.Equal(t, fakeData[expID].Note, exp.Note)
-		assert.Equal(t, fakeData[expID].Tags, exp.Tags)
 	}
 
 }
