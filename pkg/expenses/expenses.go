@@ -51,6 +51,13 @@ func (h *expHandler) GetExpense(c echo.Context) error {
 	return c.JSON(http.StatusOK, exp)
 }
 
+func (h *newHandler) GetAllExpenses(c echo.Context) error {
+	if h.db == nil {
+		return c.JSON(http.StatusNoContent, Err{Message: "No Data"})
+	}
+	return c.JSON(http.StatusOK, h.db)
+}
+
 func (h *newHandler) UpdateExpense(c echo.Context) error {
 	id := c.Param("id")
 	newExp := Expenses{}
