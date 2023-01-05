@@ -24,14 +24,6 @@ type handler struct {
 	db *sql.DB
 }
 
-type newHandler struct {
-	db []Expenses
-}
-
-type expHandler struct {
-	db map[string]*Expenses
-}
-
 func (h *handler) CreateExpense(c echo.Context) error {
 	var exp Expenses
 	err := c.Bind(&exp)

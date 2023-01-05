@@ -40,7 +40,6 @@ var (
 )
 
 func TestCreateExpenseMock(t *testing.T) {
-	// db mock
 	db, mock, _ := sqlmock.New()
 	expMockSql := "INSERT INTO expenses (title, amount, note, tags) values($1, $2, $3, $4) RETURNING id"
 	expMockRow := sqlmock.NewRows([]string{"id"}).AddRow(1)
@@ -48,7 +47,6 @@ func TestCreateExpenseMock(t *testing.T) {
 	mock.ExpectQuery(regexp.QuoteMeta(expMockSql)).WithArgs(mockData.Title, mockData.Amount, mockData.Note, pq.Array(&mockData.Tags)).
 		WillReturnRows(expMockRow)
 
-	// setup echo server
 	body, err := json.Marshal(mockData)
 	if err != nil {
 		t.Error(err)
@@ -61,7 +59,6 @@ func TestCreateExpenseMock(t *testing.T) {
 	c := e.NewContext(req, res)
 	h := &handler{db}
 
-	// Assertions
 	if assert.NoError(t, h.CreateExpense(c)) {
 		exp := &Expenses{}
 		err := json.Unmarshal(res.Body.Bytes(), exp)
@@ -76,7 +73,6 @@ func TestCreateExpenseMock(t *testing.T) {
 }
 
 func TestGetExpenseByIDSuccess(t *testing.T) {
-	// Mock
 	db, mock, _ := sqlmock.New()
 	expID := "1"
 	expMockSql := "SELECT id, title, amount, note, tags FROM expenses WHERE id = $1"
@@ -85,7 +81,6 @@ func TestGetExpenseByIDSuccess(t *testing.T) {
 
 	mock.ExpectPrepare(regexp.QuoteMeta(expMockSql)).ExpectQuery().WithArgs(expID).WillReturnRows((expMockRow))
 
-	// Setup echo server
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/expenses", nil)
 	res := httptest.NewRecorder()
@@ -102,7 +97,6 @@ func TestGetExpenseByIDSuccess(t *testing.T) {
 }
 
 func TestUpdateExpense(t *testing.T) {
-	// Mock
 	db, mock, _ := sqlmock.New()
 	expID := "1"
 	expMockSql := "UPDATE expenses SET title = $2, amount = $3, note = $4, tags = $5 WHERE id = $1"
@@ -112,7 +106,6 @@ func TestUpdateExpense(t *testing.T) {
 		WithArgs(expID, "apple smoothie", 89.00, "no discount", pq.Array(&[]string{"beverage"})).
 		WillReturnResult(expMockRow)
 
-	// Setup echo server
 	body := `{
 		"title": "apple smoothie",
 		"amount": 89,
@@ -128,14 +121,14 @@ func TestUpdateExpense(t *testing.T) {
 	c.SetParamNames("id")
 	c.SetParamValues(expID)
 	h := &handler{db}
-	// Assertions
+
 	if assert.NoError(t, h.UpdateExpense(c)) {
 		assert.Equal(t, http.StatusAccepted, res.Code)
 	}
 }
 
 func TestGetAllExpenses(t *testing.T) {
-	// Mock
+
 	db, mock, _ := sqlmock.New()
 	expMockSql := "SELECT id, title, amount, note, tags FROM expenses"
 	expMockRow := sqlmock.NewRows([]string{"id", "title", "amount", "note", "tags"}).
@@ -144,7 +137,6 @@ func TestGetAllExpenses(t *testing.T) {
 
 	mock.ExpectPrepare(regexp.QuoteMeta(expMockSql)).ExpectQuery().WillReturnRows((expMockRow))
 
-	// Setup echo server
 	e := echo.New()
 	req := httptest.NewRequest(http.MethodGet, "/expense", nil)
 	res := httptest.NewRecorder()
