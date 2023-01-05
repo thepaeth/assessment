@@ -136,3 +136,16 @@ func TestUpdateExpense(t *testing.T) {
 		assert.Equal(t, http.StatusAccepted, res.Code)
 	}
 }
+
+func TestGetAllExpenses(t *testing.T) {
+	// Setup echo server
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/expense", nil)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
+	h := &newHandler{newFakeData}
+
+	if assert.NoError(t, h.GetAllExpenses(c)) {
+		assert.Equal(t, http.StatusOK, res.Code)
+	}
+}
