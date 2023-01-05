@@ -1,6 +1,7 @@
 package expenses
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -17,6 +18,10 @@ type Expenses struct {
 
 type Err struct {
 	Message string `json:"message"`
+}
+
+type newHandler struct {
+	db []Expenses
 }
 
 type expHandler struct {
@@ -44,4 +49,24 @@ func (h *expHandler) GetExpense(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, Err{Message: "Data Not Found"})
 	}
 	return c.JSON(http.StatusOK, exp)
+}
+
+func (h *newHandler) UpdateExpense(c echo.Context) error {
+	id := c.Param("id")
+	newExp := Expenses{}
+	if err := c.Bind(&newExp); err != nil {
+		return c.JSON(http.StatusBadRequest, Err{Message: err.Error()})
+	}
+	for _, k := range h.db {
+		if fmt.Sprint(k.ID) == id {
+			return c.JSON(http.StatusAccepted, &Expenses{
+				ID:     k.ID,
+				Title:  newExp.Title,
+				Amount: newExp.Amount,
+				Note:   newExp.Note,
+				Tags:   newExp.Tags,
+			})
+		}
+	}
+	return c.JSON(http.StatusAccepted, newExp)
 }

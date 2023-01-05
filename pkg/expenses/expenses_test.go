@@ -15,6 +15,22 @@ import (
 )
 
 var (
+	newFakeData = []Expenses{
+		{
+			ID:     1,
+			Title:  "strawberry smoothie",
+			Amount: 79.00,
+			Note:   "night market promotion discount 10 bath",
+			Tags:   []string{"food", "beverage"},
+		},
+		{
+			ID:     2,
+			Title:  "iPhone 14 Pro Max 1TB",
+			Amount: 66900.00,
+			Note:   "birthday gift from my love",
+			Tags:   []string{"gadget"},
+		},
+	}
 	fakeData = map[string]*Expenses{
 		"1": &Expenses{
 			1,
@@ -99,4 +115,29 @@ func TestGetExpenseByIDSuccess(t *testing.T) {
 		assert.Equal(t, fakeData[expID].Tags, exp.Tags)
 	}
 
+}
+
+func TestUpdateExpense(t *testing.T) {
+	// Setup echo server
+	expID := "1"
+
+	body := `{
+		"title": "apple smoothie",
+		"amount": 89,
+		"note": "no discount",
+		"tags": ["beverage"]
+	}`
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodPut, "/expenses", bytes.NewBufferString(body))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	res := httptest.NewRecorder()
+	c := e.NewContext(req, res)
+	c.SetPath("/:id")
+	c.SetParamNames("id")
+	c.SetParamValues(expID)
+	h := &newHandler{newFakeData}
+	// Assertions
+	if assert.NoError(t, h.UpdateExpense(c)) {
+		assert.Equal(t, http.StatusAccepted, res.Code)
+	}
 }
