@@ -6,18 +6,16 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/thepaeth/assessment/pkg/expenses"
+	"github.com/thepaeth/assessment/expenses"
 )
 
 func main() {
-	expenses.InitDB()
-
 	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	e.POST("/expenses", expenses.CreateExpense)
+	expenses.ExpRouter(e)
 
 	log.Fatal(e.Start(os.Getenv("PORT")))
 
