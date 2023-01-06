@@ -1,4 +1,5 @@
 //go:build integration
+// +build integration
 
 package expenses
 
@@ -16,12 +17,6 @@ import (
 )
 
 func TestCreateExpenseIntegration(t *testing.T) {
-	body := bytes.NewBufferString(`{
-		"title": "strawberry smoothie",
-		"amount": 79,
-		"note": "night market promotion discount 10 bath", 
-		"tags": ["food", "beverage"]
-	}`)
 	var exp Expenses
 	res := request(http.MethodPost, uri("expenses"), body)
 	err := res.Decode(&exp)
@@ -33,6 +28,22 @@ func TestCreateExpenseIntegration(t *testing.T) {
 	assert.Equal(t, 79.00, exp.Amount)
 	assert.Equal(t, "night market promotion discount 10 bath", exp.Note)
 	assert.Equal(t, []string{"food", "beverage"}, exp.Tags)
+}
+
+func seedExpense(t testing.T) Expenses {
+	exp := Expenses
+	body := bytes.NewBufferString(`{
+		"title": "strawberry smoothie",
+		"amount": 79,
+		"note": "night market promotion discount 10 bath", 
+		"tags": ["food", "beverage"]
+	}`)
+
+	err := request(http.MethodPost, uri("users"), body).Decode(&exp)
+	if err != nil {
+		t.Fatal("can't create expense:", err)
+	}
+	return exp
 }
 
 func uri(paths ...string) string {
