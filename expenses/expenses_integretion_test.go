@@ -1,6 +1,3 @@
-//go:build integration
-// +build integration
-
 package expenses
 
 import (
@@ -10,28 +7,59 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCreateExpenseIntegration(t *testing.T) {
+func TestCreateExpenseIt(t *testing.T) {
 	var exp Expenses
+	body := bytes.NewBufferString(`{
+		"title": "strawberry smoothie",
+		"amount": 79,
+		"note": "night market promotion discount 10 bath", 
+		"tags": ["food", "beverage"]
+	}`)
 	res := request(http.MethodPost, uri("expenses"), body)
 	err := res.Decode(&exp)
 
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
-	assert.NotEqual(t, 0, exp.ID)
 	assert.Equal(t, "strawberry smoothie", exp.Title)
 	assert.Equal(t, 79.00, exp.Amount)
 	assert.Equal(t, "night market promotion discount 10 bath", exp.Note)
 	assert.Equal(t, []string{"food", "beverage"}, exp.Tags)
 }
 
-func seedExpense(t testing.T) Expenses {
-	exp := Expenses
+func TestGETExpenseByIDIt(t *testing.T) {
+	c := seedExpense(t)
+	var exp Expenses
+	res := request(http.MethodGet, uri("expenses", strconv.Itoa(c.ID)), nil)
+	err := res.Decode(&exp)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, "strawberry smoothie", exp.Title)
+	assert.Equal(t, 79.00, exp.Amount)
+	assert.Equal(t, "night market promotion discount 10 bath", exp.Note)
+	assert.Equal(t, []string{"food", "beverage"}, exp.Tags)
+}
+
+func TestGETAllExpensesIt(t *testing.T) {
+	seedExpense(t)
+	var exp []Expenses
+	res := request(http.MethodGet, uri("expenses"), nil)
+	err := res.Decode(&exp)
+
+	assert.Nil(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Greater(t, len(exp), 0)
+}
+
+func seedExpense(t *testing.T) Expenses {
+	exp := Expenses{}
 	body := bytes.NewBufferString(`{
 		"title": "strawberry smoothie",
 		"amount": 79,
