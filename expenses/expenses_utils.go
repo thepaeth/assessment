@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -22,6 +23,13 @@ func setup(t *testing.T) func() {
 	go func() {
 		e.Start(os.Getenv("PORT"))
 	}()
+	for {
+		conn, _ := net.DialTimeout("tcp", fmt.Sprint("localhost", os.Getenv("PORT")), 30*time.Second)
+		if conn != nil {
+			conn.Close()
+			break
+		}
+	}
 
 	teardown := func() {
 		ctx, down := context.WithTimeout(context.Background(), 10*time.Second)
