@@ -11,7 +11,7 @@ import (
 
 func checkAuthorized(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if c.Request().Header.Get("Authorization") == "November 10, 2009" {
+		if c.Request().Header.Get("Authorization") == os.Getenv("AUTH_TOKEN") {
 			return next(c)
 		}
 		return c.JSON(http.StatusUnauthorized, Err{Message: "Authorized Failed"})
