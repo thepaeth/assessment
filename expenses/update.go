@@ -22,5 +22,5 @@ func (h *handler) UpdateExpense(c echo.Context) error {
 	if _, err := stmt.Exec(id, exp.Title, exp.Amount, exp.Note, pq.Array(&exp.Tags)); err != nil {
 		return c.JSON(http.StatusInternalServerError, Err{Message: "Error execute update"})
 	}
-	return c.JSON(http.StatusAccepted, exp)
+	return c.JSON(http.StatusOK, exp)
 }

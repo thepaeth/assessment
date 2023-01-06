@@ -123,7 +123,7 @@ func TestUpdateExpense(t *testing.T) {
 	h := &handler{db}
 
 	if assert.NoError(t, h.UpdateExpense(c)) {
-		assert.Equal(t, http.StatusAccepted, res.Code)
+		assert.Equal(t, http.StatusOK, res.Code)
 	}
 }
 
