@@ -1,0 +1,29 @@
+version: '3.2'
+
+networks:
+  it-net-go:
+
+services:
+  it_tests:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.test
+    volumes:
+      - $PWD:/go/src/target
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+      - PORT=${PORT}
+    networks:
+      - it-net-go
+  
+  db:
+    image: postgres:12.12
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=db-assm-test
+    restart: on-failure
+    networks:
+      - it-net-go
