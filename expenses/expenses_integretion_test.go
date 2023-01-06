@@ -4,17 +4,13 @@ package expenses
 
 import (
 	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
+
 
 func TestCreateExpenseIt(t *testing.T) {
 	var exp Expenses
@@ -86,36 +82,4 @@ func seedExpense(t *testing.T) Expenses {
 		t.Fatal("can't create expense:", err)
 	}
 	return exp
-}
-
-func uri(paths ...string) string {
-	host := fmt.Sprint("http://localhost", os.Getenv("PORT"))
-	if paths == nil {
-		return host
-	}
-
-	url := append([]string{host}, paths...)
-	return strings.Join(url, "/")
-}
-
-type Response struct {
-	*http.Response
-	err error
-}
-
-func (r *Response) Decode(v interface{}) error {
-	if r.err != nil {
-		return r.err
-	}
-
-	return json.NewDecoder(r.Body).Decode(v)
-}
-
-func request(method, url string, body io.Reader) *Response {
-	req, _ := http.NewRequest(method, url, body)
-	req.Header.Add("Authorization", "November 10, 2009")
-	req.Header.Add("Content-Type", "application/json")
-	client := http.Client{}
-	res, err := client.Do(req)
-	return &Response{res, err}
 }
