@@ -12,6 +12,7 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - PORT=${PORT}
+      - AUTH_TOKEN=${AUTH_TOKEN}
     ports:
       - "127.0.0.1${PORT}${PORT}"
     restart: on-failure
